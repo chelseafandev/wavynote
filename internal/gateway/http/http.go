@@ -63,12 +63,15 @@ const (
 type HTTPServer struct {
 	httpInfo wavynote.HTTPServerInfo
 	dbInfo   wavynote.DataBaseInfo
+
+	useHttps string // on, off
 }
 
 func NewHTTPServer(httpInfo wavynote.HTTPServerInfo, dbInfo wavynote.DataBaseInfo) *HTTPServer {
 	httpServer := &HTTPServer{
 		httpInfo: httpInfo,
 		dbInfo:   dbInfo,
+		useHttps: "off",
 	}
 	return httpServer
 }
@@ -79,27 +82,6 @@ func NewHTTPServer(httpInfo wavynote.HTTPServerInfo, dbInfo wavynote.DataBaseInf
 // @securityDefinitions.basic 	BasicAuth
 func (h *HTTPServer) StartServer() {
 	connInfo := ":" + strconv.Itoa(h.httpInfo.Port)
-
-	// https://wiki.mozilla.org/Security/Server_Side_TLS
-	//
-	// not supported in go
-	//  0x00,0x9E - DHE-RSA-AES128-GCM-SHA256
-	//  0x00,0x9F - DHE-RSA-AES256-GCM-SHA384
-	tlsCfg := &tls.Config{
-		MinVersion:       tls.VersionTLS12,
-		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_AES_128_GCM_SHA256,
-			tls.TLS_AES_256_GCM_SHA384,
-			tls.TLS_CHACHA20_POLY1305_SHA256,
-		},
-	}
 
 	router := gin.Default()
 
@@ -300,17 +282,52 @@ func (h *HTTPServer) StartServer() {
 		}
 	}
 
-	tlsSrv := &http.Server{
-		Addr:         connInfo,
-		TLSConfig:    tlsCfg,
-		Handler:      router,
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0), // disable HTTP2
-		ReadTimeout:  time.Duration(h.httpInfo.Rtimeout) * time.Second,
-		WriteTimeout: time.Duration(h.httpInfo.Wtimeout) * time.Second,
-	}
+	if h.useHttps == "on" {
+		// https://wiki.mozilla.org/Security/Server_Side_TLS
+		//
+		// not supported in go
+		//  0x00,0x9E - DHE-RSA-AES128-GCM-SHA256
+		//  0x00,0x9F - DHE-RSA-AES256-GCM-SHA384
+		tlsCfg := &tls.Config{
+			MinVersion:       tls.VersionTLS12,
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+			},
+		}
 
-	err := tlsSrv.ListenAndServeTLS(h.httpInfo.Cert, h.httpInfo.Pkey)
-	if err != nil {
-		return
+		tlsSrv := &http.Server{
+			Addr:         connInfo,
+			TLSConfig:    tlsCfg,
+			Handler:      router,
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0), // disable HTTP2
+			ReadTimeout:  time.Duration(h.httpInfo.Rtimeout) * time.Second,
+			WriteTimeout: time.Duration(h.httpInfo.Wtimeout) * time.Second,
+		}
+
+		err := tlsSrv.ListenAndServeTLS(h.httpInfo.Cert, h.httpInfo.Pkey)
+		if err != nil {
+			return
+		}
+	} else {
+		httpSrv := &http.Server{
+			Addr:         connInfo,
+			Handler:      router,
+			ReadTimeout:  time.Duration(h.httpInfo.Rtimeout) * time.Second,
+			WriteTimeout: time.Duration(h.httpInfo.Wtimeout) * time.Second,
+		}
+	
+		err := httpSrv.ListenAndServe()
+		if err != nil {
+			return
+		}
 	}
 }
