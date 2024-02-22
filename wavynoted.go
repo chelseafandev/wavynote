@@ -16,10 +16,12 @@ func main() {
 	}
 
 	dbInfo := wavynote.DataBaseInfo{
-		Host:     "127.0.0.1",
+		// Host:     "127.0.0.1",
+		Host: "ep-white-morning-a2cks0uu.eu-central-1.pg.koyeb.app",
 		Port:     5432,
 		Login:    "wavynote",
-		Password: "wavy20230914",
+		// Password: "wavy20230914",
+		Password: "9Ru7lqmOwpcn",
 		Database: "wavynote",
 		SSLMode:  "disable",
 		AppName:  "wavynoted",
