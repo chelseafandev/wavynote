@@ -23,7 +23,7 @@ func main() {
 		// Password: "wavy20230914",
 		Password: "9Ru7lqmOwpcn",
 		Database: "wavynote",
-		SSLMode:  "disable",
+		SSLMode:  "require",
 		AppName:  "wavynoted",
 	}
 
