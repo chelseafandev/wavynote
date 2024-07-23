@@ -67,11 +67,11 @@ type HTTPServer struct {
 	useHttps string // on, off
 }
 
-func NewHTTPServer(httpInfo wavynote.HTTPServerInfo, dbInfo wavynote.DataBaseInfo) *HTTPServer {
+func NewHTTPServer(httpInfo wavynote.HTTPServerInfo, dbInfo wavynote.DataBaseInfo, useHttps string) *HTTPServer {
 	httpServer := &HTTPServer{
 		httpInfo: httpInfo,
 		dbInfo:   dbInfo,
-		useHttps: "off",
+		useHttps: useHttps,
 	}
 	return httpServer
 }
@@ -324,7 +324,7 @@ func (h *HTTPServer) StartServer() {
 			ReadTimeout:  time.Duration(h.httpInfo.Rtimeout) * time.Second,
 			WriteTimeout: time.Duration(h.httpInfo.Wtimeout) * time.Second,
 		}
-	
+
 		err := httpSrv.ListenAndServe()
 		if err != nil {
 			return

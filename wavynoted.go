@@ -7,26 +7,25 @@ import (
 
 func main() {
 	httpInfo := wavynote.HTTPServerInfo{
-		Ip:       "",
-		Port:     16770,
-		Cert:     "server.crt",
-		Pkey:     "server.key",
-		Rtimeout: 3600,
-		Wtimeout: 3600,
+		Ip:       wavynote.HTTPSERVER_IP,
+		Port:     wavynote.HTTPSERVER_PORT,
+		Cert:     wavynote.HTTPSERVER_CERT_PATH,
+		Pkey:     wavynote.HTTPSERVER_PKEY_PATH,
+		Rtimeout: wavynote.HTTPSERVER_RTIMEOUT,
+		Wtimeout: wavynote.HTTPSERVER_WTIMEOUT,
+		UseHttps: wavynote.HTTPSERVER_USE_HTTPS,
 	}
 
 	dbInfo := wavynote.DataBaseInfo{
-		// Host:     "127.0.0.1",
-		Host: "ep-white-morning-a2cks0uu.eu-central-1.pg.koyeb.app",
-		Port:     5432,
-		Login:    "wavynote",
-		// Password: "wavy20230914",
-		Password: "9Ru7lqmOwpcn",
-		Database: "wavynote",
-		SSLMode:  "require",
-		AppName:  "wavynoted",
+		Host:     wavynote.DATABASE_HOST,
+		Port:     wavynote.DATABASE_PORT,
+		Login:    wavynote.DATABASE_LOGIN,
+		Password: wavynote.DATABASE_PASSWORD,
+		Database: wavynote.DATABASE_DB,
+		SSLMode:  wavynote.DATABASE_SSLMODE,
+		AppName:  wavynote.DATABASE_APPNAME,
 	}
 
-	httpServer := http.NewHTTPServer(httpInfo, dbInfo)
+	httpServer := http.NewHTTPServer(httpInfo, dbInfo, httpInfo.UseHttps)
 	httpServer.StartServer()
 }
